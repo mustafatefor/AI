@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article | Alex Sterling</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">AS<span>.</span></div>
+            <ul class="nav-links">
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#projects">Projects</a></li>
+                <li><a href="index.html#blog">Blog</a></li>
+            </ul>
+            <div class="theme-toggle" id="theme-toggle">
+                <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </div>
+        </div>
+    </nav>
+
+    <main id="post-container" class="fade-in">
+        <header class="post-header">
+            <div class="container">
+                <h1 id="post-title">Loading...</h1>
+                <p class="post-meta" id="post-date"></p>
+            </div>
+        </header>
+
+        <article class="post-content container">
+            <div id="post-body"></div>
+        </article>
+
+        <div class="container text-center" style="margin-bottom: 4rem;">
+            <a href="index.html#blog" class="btn btn-outline">← Back to Blog</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Alex Sterling. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Theme Logic (duplicated for standalone page)
+            const htmlElement = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            htmlElement.setAttribute('data-theme', savedTheme);
+
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                const current = htmlElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                htmlElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+            });
+
+            // Fetch Post Data
+            const params = new URLSearchParams(window.location.search);
+            const postId = parseInt(params.get('id'));
+
+            if (!postId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                let post;
+
+                // Try fetching from API first
+                try {
+                    const response = await fetch(`/.netlify/functions/blog-api?id=${postId}`);
+                    if (response.ok) {
+                        post = await response.json();
+                    }
+                } catch (e) {
+                    console.warn('API fetch failed, trying local JSON');
+                }
+
+                // Fallback to local JSON if API fails or returns nothing (for local testing)
+                if (!post) {
+                    const response = await fetch('data/blog.json');
+                    const posts = await response.json();
+                    post = posts.find(p => p.id === postId);
+                }
+
+                if (post) {
+                    document.title = `${post.title} | Alex Sterling`;
+                    document.getElementById('post-title').textContent = post.title;
+                    document.getElementById('post-date').textContent = post.date;
+                    document.getElementById('post-body').innerHTML = post.content;
+                } else {
+                    document.getElementById('post-title').textContent = 'Article not found';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>
